@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 class RandomDatasetGenerator:
 
     def __init__(self, seed: Optional[int] = None, locale: Union[str, List[str]] = 'en_US'):
-
         self.seed = seed
         if seed is not None:
             np.random.seed(seed)
@@ -48,94 +47,101 @@ class RandomDatasetGenerator:
 
             # Person related
             "name": self._generate_names,
-            "first_name": lambda n, d, p: np.array([self.faker.first_name() for _ in range(n)]),
-            "last_name": lambda n, d, p: np.array([self.faker.last_name() for _ in range(n)]),
-            "prefix": lambda n, d, p: np.array([self.faker.prefix() for _ in range(n)]),
-            "suffix": lambda n, d, p: np.array([self.faker.suffix() for _ in range(n)]),
-            "gender": lambda n, d, p: np.array([self.faker.random_element(elements=('M', 'F', 'NB')) for _ in range(n)]),
-            "age": lambda n, d, p: np.array([self.faker.random_int(**p) if p else self.faker.random_int(min=18, max=90) for _ in range(n)]),
-            "birthdate": lambda n, d, p: np.array([self.faker.date_of_birth(**p) if p else self.faker.date_of_birth() for _ in range(n)]),
-            "ssn": lambda n, d, p: np.array([self.faker.ssn() for _ in range(n)]),
+            "first_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.first_name() for _ in range(n)])),
+            "last_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.last_name() for _ in range(n)])),
+            "prefix": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.prefix() for _ in range(n)])),
+            "suffix": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.suffix() for _ in range(n)])),
+            "gender": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.random_element(elements=('M', 'F', 'NB')) for _ in range(n)])),
+            "age": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.random_int(**p) if p else self.faker.random_int(min=18, max=90) for _ in range(n)])),
+            "birthdate": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.date_of_birth(**p) if p else self.faker.date_of_birth() for _ in range(n)])),
+            "ssn": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.ssn() for _ in range(n)])),
 
             # Internet related
-            "email": lambda n, d, p: np.array([self.faker.email() for _ in range(n)]),
-            "username": lambda n, d, p: np.array([self.faker.user_name() for _ in range(n)]),
-            "password": lambda n, d, p: np.array([self.faker.password(**p) if p else self.faker.password() for _ in range(n)]),
-            "domain": lambda n, d, p: np.array([self.faker.domain_name() for _ in range(n)]),
-            "url": lambda n, d, p: np.array([self.faker.url() for _ in range(n)]),
-            "ipv4": lambda n, d, p: np.array([self.faker.ipv4() for _ in range(n)]),
-            "ipv6": lambda n, d, p: np.array([self.faker.ipv6() for _ in range(n)]),
-            "mac_address": lambda n, d, p: np.array([self.faker.mac_address() for _ in range(n)]),
-            "user_agent": lambda n, d, p: np.array([self.faker.user_agent() for _ in range(n)]),
+            "email": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.email() for _ in range(n)])),
+            "username": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.user_name() for _ in range(n)])),
+            "password": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.password(**p) if p else self.faker.password() for _ in range(n)])),
+            "domain": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.domain_name() for _ in range(n)])),
+            "url": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.url() for _ in range(n)])),
+            "ipv4": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.ipv4() for _ in range(n)])),
+            "ipv6": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.ipv6() for _ in range(n)])),
+            "mac_address": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.mac_address() for _ in range(n)])),
+            "user_agent": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.user_agent() for _ in range(n)])),
 
             # Address related
-            "address": lambda n, d, p: np.array([self.faker.address() for _ in range(n)]),
-            "street_address": lambda n, d, p: np.array([self.faker.street_address() for _ in range(n)]),
-            "city": lambda n, d, p: np.array([self.faker.city() for _ in range(n)]),
-            "state": lambda n, d, p: np.array([self.faker.state() for _ in range(n)]),
-            "state_abbr": lambda n, d, p: np.array([self.faker.state_abbr() for _ in range(n)]),
-            "zipcode": lambda n, d, p: np.array([self.faker.zipcode() for _ in range(n)]),
-            "country": lambda n, d, p: np.array([self.faker.country() for _ in range(n)]),
-            "country_code": lambda n, d, p: np.array([self.faker.country_code() for _ in range(n)]),
-            "latitude": lambda n, d, p: np.array([float(self.faker.latitude()) for _ in range(n)]),
-            "longitude": lambda n, d, p: np.array([float(self.faker.longitude()) for _ in range(n)]),
-            "coordinates": lambda n, d, p: np.array([f"{self.faker.latitude()}, {self.faker.longitude()}" for _ in range(n)]),
+            "address": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.address() for _ in range(n)])),
+            "street_address": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.street_address() for _ in range(n)])),
+            "city": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.city() for _ in range(n)])),
+            "state": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.state() for _ in range(n)])),
+            "state_abbr": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.state_abbr() for _ in range(n)])),
+            "zipcode": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.zipcode() for _ in range(n)])),
+            "country": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.country() for _ in range(n)])),
+            "country_code": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.country_code() for _ in range(n)])),
+            "latitude": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([float(self.faker.latitude()) for _ in range(n)])),
+            "longitude": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([float(self.faker.longitude()) for _ in range(n)])),
+            "coordinates": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([f"{self.faker.latitude()}, {self.faker.longitude()}" for _ in range(n)])),
 
             # Phone related
-            "phone_number": lambda n, d, p: np.array([self.faker.phone_number() for _ in range(n)]),
-            "msisdn": lambda n, d, p: np.array([self.faker.msisdn() for _ in range(n)]),
-            "international_phone": lambda n, d, p: np.array([self.faker.phone_number() for _ in range(n)]),
+            "phone_number": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.phone_number() for _ in range(n)])),
+            "msisdn": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.msisdn() for _ in range(n)])),
+            "international_phone": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.phone_number() for _ in range(n)])),
 
             # Company related
-            "company": lambda n, d, p: np.array([self.faker.company() for _ in range(n)]),
-            "company_suffix": lambda n, d, p: np.array([self.faker.company_suffix() for _ in range(n)]),
-            "job": lambda n, d, p: np.array([self.faker.job() for _ in range(n)]),
-            "industry": lambda n, d, p: np.array([self.faker.job() for _ in range(n)]),
+            "company": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.company() for _ in range(n)])),
+            "company_suffix": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.company_suffix() for _ in range(n)])),
+            "job": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.job() for _ in range(n)])),
+            "industry": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.job() for _ in range(n)])),
 
             # Financial
-            "credit_card_number": lambda n, d, p: np.array([self.faker.credit_card_number(**p) if p else self.faker.credit_card_number() for _ in range(n)]),
-            "credit_card_provider": lambda n, d, p: np.array([self.faker.credit_card_provider() for _ in range(n)]),
-            "credit_card_expire": lambda n, d, p: np.array([self.faker.credit_card_expire() for _ in range(n)]),
-            "credit_card_security_code": lambda n, d, p: np.array([self.faker.credit_card_security_code() for _ in range(n)]),
-            "currency_code": lambda n, d, p: np.array([self.faker.currency_code() for _ in range(n)]),
-            "currency_name": lambda n, d, p: np.array([self.faker.currency_name() for _ in range(n)]),
+            "credit_card_number": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.credit_card_number(**p) if p else self.faker.credit_card_number() for _ in range(n)])),
+            "credit_card_provider": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.credit_card_provider() for _ in range(n)])),
+            "credit_card_expire": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.credit_card_expire() for _ in range(n)])),
+            "credit_card_security_code": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.credit_card_security_code() for _ in range(n)])),
+            "currency_code": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.currency_code() for _ in range(n)])),
+            "currency_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.currency_name() for _ in range(n)])),
 
             # Text content
-            "text": lambda n, d, p: np.array([self.faker.text(**p) if p else self.faker.text() for _ in range(n)]),
-            "paragraph": lambda n, d, p: np.array([self.faker.paragraph(**p) if p else self.faker.paragraph() for _ in range(n)]),
-            "sentence": lambda n, d, p: np.array([self.faker.sentence(**p) if p else self.faker.sentence() for _ in range(n)]),
-            "word": lambda n, d, p: np.array([self.faker.word() for _ in range(n)]),
+            "text": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.text(**p) if p else self.faker.text() for _ in range(n)])),
+            "paragraph": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.paragraph(**p) if p else self.faker.paragraph() for _ in range(n)])),
+            "sentence": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.sentence(**p) if p else self.faker.sentence() for _ in range(n)])),
+            "word": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.word() for _ in range(n)])),
 
             # Color
-            "color_name": lambda n, d, p: np.array([self.faker.color_name() for _ in range(n)]),
-            "hex_color": lambda n, d, p: np.array([self.faker.hex_color() for _ in range(n)]),
-            "rgb_color": lambda n, d, p: np.array([self.faker.rgb_color() for _ in range(n)]),
+            "color_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.color_name() for _ in range(n)])),
+            "hex_color": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.hex_color() for _ in range(n)])),
+            "rgb_color": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.rgb_color() for _ in range(n)])),
 
             # Various identifiers
-            "uuid4": lambda n, d, p: np.array([str(self.faker.uuid4()) for _ in range(n)]),
-            "isbn10": lambda n, d, p: np.array([self.faker.isbn10() for _ in range(n)]),
-            "isbn13": lambda n, d, p: np.array([self.faker.isbn13() for _ in range(n)]),
-            "ean8": lambda n, d, p: np.array([self.faker.ean8() for _ in range(n)]),
-            "ean13": lambda n, d, p: np.array([self.faker.ean13() for _ in range(n)]),
+            "uuid4": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([str(self.faker.uuid4()) for _ in range(n)])),
+            "isbn10": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.isbn10() for _ in range(n)])),
+            "isbn13": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.isbn13() for _ in range(n)])),
+            "ean8": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.ean8() for _ in range(n)])),
+            "ean13": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.ean13() for _ in range(n)])),
 
             # Dates and times
-            "date": lambda n, d, p: np.array([self.faker.date(**p) if p else self.faker.date() for _ in range(n)]),
-            "time": lambda n, d, p: np.array([self.faker.time() for _ in range(n)]),
-            "day_of_week": lambda n, d, p: np.array([self.faker.day_of_week() for _ in range(n)]),
-            "month_name": lambda n, d, p: np.array([self.faker.month_name() for _ in range(n)]),
-            "timezone": lambda n, d, p: np.array([self.faker.timezone() for _ in range(n)]),
+            "date": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.date(**p) if p else self.faker.date() for _ in range(n)])),
+            "time": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.time() for _ in range(n)])),
+            "day_of_week": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.day_of_week() for _ in range(n)])),
+            "month_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.month_name() for _ in range(n)])),
+            "timezone": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.timezone() for _ in range(n)])),
 
             # Miscellaneous
-            "file_path": lambda n, d, p: np.array([self.faker.file_path(**p) if p else self.faker.file_path() for _ in range(n)]),
-            "file_name": lambda n, d, p: np.array([self.faker.file_name() for _ in range(n)]),
-            "mime_type": lambda n, d, p: np.array([self.faker.mime_type() for _ in range(n)]),
-            "image_url": lambda n, d, p: np.array([self.faker.image_url() for _ in range(n)]),
-            "user_name": lambda n, d, p: np.array([self.faker.user_name() for _ in range(n)]),
-            "emoji": lambda n, d, p: np.array([self.faker.emoji() for _ in range(n)]),
+            "file_path": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.file_path(**p) if p else self.faker.file_path() for _ in range(n)])),
+            "file_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.file_name() for _ in range(n)])),
+            "mime_type": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.mime_type() for _ in range(n)])),
+            "image_url": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.image_url() for _ in range(n)])),
+            "user_name": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.user_name() for _ in range(n)])),
+            "emoji": lambda n, d, p, c: self._apply_choices_or_generate(n, c, lambda: np.array([self.faker.emoji() for _ in range(n)])),
 
             # Custom generator for full flexibility
             "custom": self._generate_custom,
         }
+
+    def _apply_choices_or_generate(self, n_rows: int, choices: Optional[List], generator_func):
+        """Apply choices if provided, otherwise use the generator function"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+        else:
+            return generator_func()
 
     def generate_dataset(
         self,
@@ -158,7 +164,7 @@ class RandomDatasetGenerator:
             >>> config = [
             ...     {"name": "age", "type": "integer", "params": {"min": 18, "max": 65}},
             ...     {"name": "income", "type": "float", "distribution": "normal", "params": {"loc": 50000, "scale": 15000}},
-            ...     {"name": "name", "type": "name"},
+            ...     {"name": "name", "type": "name", "choices": ["Alice", "Bob", "Charlie"]},
             ...     {"name": "email", "type": "email"},
             ...     {"name": "job", "type": "job"}
             ... ]
@@ -171,6 +177,7 @@ class RandomDatasetGenerator:
             col_name = col_config["name"]
             col_type = col_config["type"]
             params = col_config.get("params", {})
+            choices = col_config.get("choices", None)
 
             if "depends_on" in col_config:
                 dependency = col_config["depends_on"]
@@ -186,8 +193,20 @@ class RandomDatasetGenerator:
 
             if col_type in self.data_type_generators:
                 distribution = col_config.get("distribution", None)
-                data[col_name] = self.data_type_generators[col_type](
-                    n_rows, distribution, params)
+
+                # Check if the generator expects choices parameter
+                generator = self.data_type_generators[col_type]
+                try:
+                    # Try to call with choices parameter
+                    data[col_name] = generator(
+                        n_rows, distribution, params, choices)
+                except TypeError:
+                    # Fallback for generators that don't support choices
+                    if choices:
+                        data[col_name] = np.random.choice(choices, size=n_rows)
+                    else:
+                        data[col_name] = generator(
+                            n_rows, distribution, params)
             else:
                 raise ValueError(f"Unknown column type: {col_type}")
 
@@ -196,7 +215,6 @@ class RandomDatasetGenerator:
         # Handle index
         if not include_index or isinstance(include_index, dict):
             if isinstance(include_index, dict):
-
                 index_config = include_index
                 index_type = index_config.get("type", "range")
 
@@ -226,31 +244,6 @@ class RandomDatasetGenerator:
 
         return df
 
-    def _generate_integers(
-        self, n_rows: int, distribution: Optional[str], params: Dict
-    ) -> np.ndarray:
-        """Generate integer values"""
-        if distribution:
-            # Generate using specified distribution then convert to integers
-            values = self._generate_from_distribution(
-                distribution, n_rows, params)
-            return values.astype(int)
-        else:
-            min_val = params.get("min", 0)
-            max_val = params.get("max", 100)
-            return np.random.randint(min_val, max_val + 1, size=n_rows)
-
-    def _generate_floats(
-        self, n_rows: int, distribution: Optional[str], params: Dict
-    ) -> np.ndarray:
-        """Generate float values"""
-        if distribution:
-            return self._generate_from_distribution(distribution, n_rows, params)
-        else:
-            min_val = params.get("min", 0.0)
-            max_val = params.get("max", 1.0)
-            return np.random.uniform(min_val, max_val, size=n_rows)
-
     def _generate_from_distribution(
         self, distribution: str, n_rows: int, params: Dict
     ) -> np.ndarray:
@@ -264,7 +257,6 @@ class RandomDatasetGenerator:
                 p = params.get("p", 0.5)
                 return self.distributions[distribution](p, n_rows)
             else:
-
                 size = dist_params.pop("size")
                 return self.distributions[distribution](**dist_params, size=size)
         except TypeError as e:
@@ -288,17 +280,56 @@ class RandomDatasetGenerator:
             raise TypeError(
                 f"Invalid parameters for {distribution} distribution. Supported parameters: {supported_params.get(distribution, 'unknown')}") from e
 
+    def _generate_integers(
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
+    ) -> np.ndarray:
+        """Generate integer values"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+
+        if distribution:
+            # Generate using specified distribution then convert to integers
+            values = self._generate_from_distribution(
+                distribution, n_rows, params)
+            return values.astype(int)
+        else:
+            # Handle both 'min'/'max' and 'low'/'high' parameters for compatibility
+            min_val = params.get("min", params.get("low", 0))
+            max_val = params.get("max", params.get("high", 100))
+            return np.random.randint(min_val, max_val + 1, size=n_rows)
+
+    def _generate_floats(
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
+    ) -> np.ndarray:
+        """Generate float values"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+
+        if distribution:
+            return self._generate_from_distribution(distribution, n_rows, params)
+        else:
+            min_val = params.get("min", params.get("low", 0.0))
+            max_val = params.get("max", params.get("high", 1.0))
+            return np.random.uniform(min_val, max_val, size=n_rows)
+
     def _generate_booleans(
-        self, n_rows: int, distribution: Optional[str], params: Dict
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
     ) -> np.ndarray:
         """Generate boolean values"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+
         p_true = params.get("p_true", 0.5)
         return np.random.random(size=n_rows) < p_true
 
     def _generate_categories(
-        self, n_rows: int, distribution: Optional[str], params: Dict
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
     ) -> np.ndarray:
         """Generate categorical values"""
+        if choices:
+            weights = params.get("weights", None)
+            return np.random.choice(choices, size=n_rows, p=weights)
+
         categories = params.get("categories", ["A", "B", "C"])
         weights = params.get("weights", None)
 
@@ -308,9 +339,12 @@ class RandomDatasetGenerator:
         return np.random.choice(categories, size=n_rows, p=weights)
 
     def _generate_datetimes(
-        self, n_rows: int, distribution: Optional[str], params: Dict
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
     ) -> np.ndarray:
         """Generate datetime values"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+
         start_date = params.get("start", "2020-01-01T00:00:00")
         end_date = params.get("end", "2025-01-01T00:00:00")
 
@@ -336,9 +370,12 @@ class RandomDatasetGenerator:
             return np.array([start_date + timedelta(seconds=sec) for sec in random_seconds])
 
     def _generate_names(
-        self, n_rows: int, distribution: Optional[str], params: Dict
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
     ) -> np.ndarray:
         """Generate names using Faker"""
+        if choices:
+            return np.random.choice(choices, size=n_rows)
+
         name_type = params.get("name_type", "full")  # full, first, last
 
         if name_type == "first":
@@ -432,7 +469,7 @@ class RandomDatasetGenerator:
             raise ValueError(f"Unknown function type: {function_type}")
 
     def _generate_custom(
-        self, n_rows: int, distribution: Optional[str], params: Dict
+        self, n_rows: int, distribution: Optional[str], params: Dict, choices: Optional[List] = None
     ) -> np.ndarray:
         """
         Generate custom values using a provided function.
@@ -442,6 +479,10 @@ class RandomDatasetGenerator:
         2. A lambda or function in string form (e.g., "lambda i: f'CUSTOM-{i}'")
         3. A dict with 'choices' to select from
         """
+        if choices:
+            weights = params.get("weights")
+            return np.random.choice(choices, size=n_rows, p=weights)
+
         faker_method = params.get("faker_method")
         if faker_method:
             # Use a specific Faker provider method
@@ -451,11 +492,11 @@ class RandomDatasetGenerator:
             except AttributeError:
                 raise ValueError(f"Unknown Faker method: {faker_method}")
 
-        choices = params.get("choices")
-        if choices:
-            # Select from provided choices
+        param_choices = params.get("choices")
+        if param_choices:
+            # Select from provided choices in params
             weights = params.get("weights")
-            return np.random.choice(choices, size=n_rows, p=weights)
+            return np.random.choice(param_choices, size=n_rows, p=weights)
 
         # Default to generated IDs
         prefix = params.get("prefix", "ID")
